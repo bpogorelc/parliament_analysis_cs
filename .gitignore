@@ -1,0 +1,25 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+*.DotSettings.user
+
+## Env / secrets
+.env
+*.pfx
+
+## Python leftovers (if any)
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+## Misc
+tmp_mcp_probe/
+.DS_Store
+Thumbs.db
+PwC_AI_Engineering_Coding_Challenge_translated.pdf

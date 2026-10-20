@@ -1,0 +1,136 @@
+{
+  "$schema_note": "MCP tool contracts for the parliament analysis agent. Keep tools deterministic; LLM prose stays in the host/summarizer.",
+  "tools": [
+    {
+      "name": "get_person_info",
+      "description": "Look up a politician by name (or DIP person id) and return identity, roles, and parliamentary group (Fraktion) affiliation. Use for questions like 'Who is Friedrich Merz?'.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Person name (e.g. 'Friedrich Merz') or numeric DIP person id."
+          },
+          "wahlperiode": {
+            "type": "integer",
+            "description": "Optional legislative period used to pick the most relevant Fraktion when multiple roles exist. Defaults to 20.",
+            "default": 20
+          }
+        },
+        "required": ["query"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "found": { "type": "boolean" },
+          "person_id": { "type": ["string", "null"] },
+          "name": { "type": ["string", "null"] },
+          "titel": { "type": ["string", "null"] },
+          "fraktion": { "type": ["string", "null"] },
+          "funktion": { "type": ["string", "null"] },
+          "wahlperioden": {
+            "type": "array",
+            "items": { "type": "integer" }
+          },
+          "matches": {
+            "type": "array",
+            "description": "If the name is ambiguous, candidate matches for disambiguation.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "person_id": { "type": "string" },
+                "name": { "type": "string" },
+                "fraktion": { "type": ["string", "null"] }
+              }
+            }
+          },
+          "notes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Data-quality caveats (missing Fraktion, conflicting roles, etc.)."
+          }
+        },
+        "required": ["found"]
+      }
+    },
+    {
+      "name": "get_fraktion_distribution",
+      "description": "Compute parliamentary group (Fraktion) percentage shares for politicians in a legislative period. Use for questions like 'What is the parliamentary group distribution in the 20th legislative period?'.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "wahlperiode": {
+            "type": "integer",
+            "description": "Legislative period number (Wahlperiode).",
+            "default": 20
+          },
+          "include_unknown": {
+            "type": "boolean",
+            "description": "If true, include people with missing/unclear Fraktion as 'Unknown'.",
+            "default": true
+          }
+        },
+        "required": []
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "wahlperiode": { "type": "integer" },
+          "total_persons": { "type": "integer" },
+          "classified_persons": { "type": "integer" },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "fraktion": { "type": "string" },
+                "count": { "type": "integer" },
+                "percentage": { "type": "number" }
+              },
+              "required": ["fraktion", "count", "percentage"]
+            }
+          },
+          "methodology": {
+            "type": "string",
+            "description": "Short note on how affiliation was derived from DIP person_roles."
+          },
+          "notes": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["wahlperiode", "total_persons", "groups"]
+      }
+    },
+    {
+      "name": "summarize_fraktion_distribution",
+      "description": "Optional convenience tool: fetch distribution for a Wahlperiode and return an LLM-written natural-language summary. Prefer get_fraktion_distribution + host-side summarization when the chat host already has an LLM.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "wahlperiode": {
+            "type": "integer",
+            "default": 20
+          },
+          "language": {
+            "type": "string",
+            "enum": ["en", "de"],
+            "default": "en"
+          }
+        },
+        "required": []
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "wahlperiode": { "type": "integer" },
+          "summary": { "type": "string" },
+          "distribution": {
+            "$ref_note": "Same shape as get_fraktion_distribution output"
+          }
+        },
+        "required": ["wahlperiode", "summary", "distribution"]
+      }
+    }
+  ]
+}

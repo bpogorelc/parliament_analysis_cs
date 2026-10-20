@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Parliament Agent · DIP Fraktionsanalyse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Source+Sans+3:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/app.css" />
+  </head>
+  <body>
+    <div class="atmosphere" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">Parliament Agent</span>
+      </div>
+      <p class="status" id="healthStatus">Prüfe Verbindung…</p>
+    </header>
+
+    <main>
+      <section class="hero">
+        <p class="eyebrow">DIP · Deutscher Bundestag</p>
+        <h1>Parliament Agent</h1>
+        <p class="lede">
+          Fraktionsanteile aus der DIP-API berechnen und per Agent nachfragen —
+          deterministische Zahlen, LLM nur für Zusammenfassung und Tool-Auswahl.
+        </p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#analysis">Verteilung analysieren</a>
+          <a class="btn ghost" href="#chat">Agent fragen</a>
+        </div>
+      </section>
+
+      <section class="panel" id="analysis">
+        <div class="section-head">
+          <h2>Fraktionsverteilung</h2>
+          <p>Wahlperiode wählen, Anteile laden und optional eine LLM-Zusammenfassung erzeugen.</p>
+        </div>
+
+        <form class="controls" id="distributionForm">
+          <label>
+            Wahlperiode
+            <input type="number" name="wahlperiode" id="wahlperiode" min="1" max="30" value="20" />
+          </label>
+          <label class="checkbox">
+            <input type="checkbox" name="include_unknown" id="includeUnknown" checked />
+            Unknown einbeziehen
+          </label>
+          <div class="control-actions">
+            <button type="submit" class="btn primary" id="loadDistribution">Laden</button>
+            <button type="button" class="btn ghost" id="loadSummary">Zusammenfassen</button>
+          </div>
+        </form>
+
+        <p class="feedback" id="analysisFeedback" hidden></p>
+
+        <div class="results" id="results" hidden>
+          <div class="metrics">
+            <div>
+              <span class="metric-label">Personen</span>
+              <strong id="metricTotal">—</strong>
+            </div>
+            <div>
+              <span class="metric-label">Klassifiziert</span>
+              <strong id="metricClassified">—</strong>
+            </div>
+            <div>
+              <span class="metric-label">Wahlperiode</span>
+              <strong id="metricPeriod">—</strong>
+            </div>
+          </div>
+
+          <div class="chart" id="chart" role="img" aria-label="Fraktionsanteile als Balken"></div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fraktion</th>
+                  <th>Anzahl</th>
+                  <th>Anteil</th>
+                </tr>
+              </thead>
+              <tbody id="distributionBody"></tbody>
+            </table>
+          </div>
+
+          <article class="summary" id="summaryBox" hidden>
+            <h3>Zusammenfassung</h3>
+            <p id="summaryText"></p>
+          </article>
+
+          <details class="notes" id="notesBox" hidden>
+            <summary>Datenhinweise</summary>
+            <ul id="notesList"></ul>
+          </details>
+        </div>
+      </section>
+
+      <section class="panel" id="chat">
+        <div class="section-head">
+          <h2>Agent-Chat</h2>
+          <p>
+            Fragen wie „Wie ist die Fraktionsverteilung in der 20. Wahlperiode?“ oder
+            „Wer ist Friedrich Merz?“ — das LLM wählt die passenden Tools. Wählen Sie den
+            Ausführungspfad: direktes Tool Calling oder MCP Client ↔ Server.
+          </p>
+        </div>
+
+        <fieldset class="mode-toggle">
+          <legend>Ausführungspfad</legend>
+          <label class="mode-option">
+            <input type="radio" name="chatMode" value="direct" checked />
+            Direkt (Tool Calling)
+          </label>
+          <label class="mode-option">
+            <input type="radio" name="chatMode" value="mcp" />
+            MCP (Client ↔ Server)
+          </label>
+        </fieldset>
+        <p class="hint">
+          Direkt ruft die Tool-Handler im Prozess auf. MCP nutzt einen MCP-Client,
+          der dieselben Tools über das MCP-Protokoll am Server aufruft
+          (in-process memory transport — auch auf Render zuverlässig).
+        </p>
+
+        <div class="chat-shell" id="chatLog" aria-live="polite"></div>
+
+        <form class="chat-form" id="chatForm">
+          <input
+            type="text"
+            id="chatInput"
+            name="question"
+            placeholder="Ihre Frage an den Agenten…"
+            autocomplete="off"
+            required
+          />
+          <button type="submit" class="btn primary">Senden</button>
+        </form>
+        <p class="hint" id="chatEngine"></p>
+      </section>
+    </main>
+
+    <footer>
+      <p>
+        Erste Kundenlieferung · Zahlen aus DIP-Services · MCP-Tools bleiben die
+        Fähigkeitsgrenze · C# / ASP.NET Core
+      </p>
+    </footer>
+
+    <script src="/js/app.js" type="module"></script>
+  </body>
+</html>
